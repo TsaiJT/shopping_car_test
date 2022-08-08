@@ -4,9 +4,9 @@ localhost package: docker, docker-compose
 
 
 # start service
-1. `$mkdir -p /opt/shopping_car`
-2. copy the package to `/opt/shopping_car`
-3. `$cd /opt/shopping_car`
+1. `$mkdir -p /opt/shopping_cart`
+2. copy the package to `/opt/shopping_cart`
+3. `$cd /opt/shopping_cart`
 3. `$docker-compose up -d`
 4. the service would start up
 
