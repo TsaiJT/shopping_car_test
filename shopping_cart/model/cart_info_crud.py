@@ -14,7 +14,7 @@ def create_cart_info(user_obj, product_obj, quantity):
     }
 
     try:
-        cart = User(**cart_info)
+        cart = CartInfo(**cart_info)
         session.add(cart)
         session.commit()
 
@@ -46,7 +46,7 @@ def update_cart_info(cart_info, product_obj, quantity):
 
 
 
-def update_to_cart(user_id, cart_info):
+def update_to_cart(user_id, cart_infos):
     # get user obj
     try:
         user = session.query(User).filter_by(id=user_id).first()
@@ -57,11 +57,11 @@ def update_to_cart(user_id, cart_info):
         msg = "{}".format(e)
         return False, msg
 
-
     # check each product id
-    for product_id in cart_info:
+    for product_id in cart_infos:
         try:
             product = session.query(Product).filter_by(id=product_id).first()
+            print(product.id)
             if product is None:
                 return False, "{} not found".format(product_id)
 
@@ -71,7 +71,7 @@ def update_to_cart(user_id, cart_info):
 
         try:
             cart_info = session.query(CartInfo).filter_by(owner_id=user_id, item_id=product_id).first()
-            quantity = cart_info[product_id]
+            quantity = cart_infos[product_id]
             if cart_info is None:
                 is_ok, msg = create_cart_info(user, product, quantity)
                 if not is_ok:
@@ -101,8 +101,8 @@ def get_cart_info(user_id):
     
     for cart_info in cart_infos:
         tmp = {}
-        tmp["id"] = cart_info.id
-        tmp[cart_info.item_id] = cart_info.quantity
+        tmp[cart_info.id] = {}
+        tmp[cart_info.id][cart_info.item_id] = cart_info.quantity
 
         res.append(tmp)
     
@@ -110,6 +110,7 @@ def get_cart_info(user_id):
 
 
 def del_cart_item(user_id, product_ids):
+
     # get user obj
     try:
         user = session.query(User).filter_by(id=user_id).first()
@@ -120,6 +121,7 @@ def del_cart_item(user_id, product_ids):
         msg = "{}".format(e)
         return False, msg
 
+    count = 0
     for product_id in product_ids:
         try:
             cart_info = session.query(CartInfo).filter_by(owner_id=user_id, item_id=product_id).first()
@@ -129,10 +131,14 @@ def del_cart_item(user_id, product_ids):
             session.delete(cart_info)
             session.commit()
 
+            count += 1
         except Exception as e:
             msg = "{}".format(e)
             return False, msg
 
+    if count == 0:
+        return False, "not item in cart"
+    
     return True, "delete Successfully"
 
 

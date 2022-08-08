@@ -226,7 +226,7 @@ async def update_cart(user_id: str,
     
     result = {}
 
-    is_ok, msg = update_to_cart(user_id, cart_info)
+    is_ok, msg = update_to_cart(user_id, cart_info.cart_info)
     result["msg"] = msg
 
     status_code = 200
@@ -243,7 +243,7 @@ async def cart_item_delete(user_id: str,
     
     result = {}
 
-    is_ok, msg = del_cart_item(user_id, product_ids)
+    is_ok, msg = del_cart_item(user_id, product_ids.product_ids)
     result["msg"] = msg
 
     status_code = 200
@@ -255,11 +255,11 @@ async def cart_item_delete(user_id: str,
 
 
 @app.post("/cart_checkout")
-async def cart_checkout(cart_ids: Cart_Checkout,
+async def cart_checkout(cart_id: Cart_Checkout,
                         current_user: UserLogin = Depends(get_current_user)):
     result = {}
 
-    is_ok, msg = checkout_cart(cart_ids)
+    is_ok, msg = checkout_cart(cart_ids.cart_ids)
     result["msg"] = msg
 
     status_code = 200

@@ -41,10 +41,10 @@ def update_user(id, **update_info):
         return False, msg 
 
 
-    if update_info.get("password"):
+    if update_info.get("password") is not None:
         user.password = get_password_hash(update_info.get("password"))
 
-    if update_info.get("description"):
+    if update_info.get("description") is not None:
         user.description = update_info.get("description")
 
 
@@ -73,8 +73,6 @@ def get_user(id):
     res["id"] = user.id
     res["email"] = user.email
     res["description"] = user.description
-    res["products"] = user.products
-    res["orders"] = user.orders
 
     return True, res
 
@@ -84,12 +82,11 @@ def get_user_by_email(email):
         if user is None:
             return False, "email not found"
 
-        return True, user
-
     except Exception as e:
         msg = "{}".format(e)
         return False, msg
 
+    return True, user
 
 
 def get_users():

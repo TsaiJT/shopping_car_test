@@ -4,7 +4,7 @@ from model.user_crud import get_user_by_email
 
 def authenticate_user(email: str, password: str):
     is_ok, user = get_user_by_email(email)
-    if not user:
+    if not is_ok:
         return False
 
     if not verify_password(password, user.password):

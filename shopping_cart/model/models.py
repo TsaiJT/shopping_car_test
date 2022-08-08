@@ -64,8 +64,8 @@ class CartInfo(Base):
 
     id = Column(String(255), primary_key=True, default=generate_uuid)
 
-    owner_id = Column(String(255), unique=True, index=True)
-    item_id = Column(String(255), unique=True, index=True)
+    owner_id = Column(String(255), index=True)
+    item_id = Column(String(255), index=True)
     quantity = Column(Integer, nullable=False)
 
 
@@ -73,8 +73,8 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(String(255), primary_key=True, default=generate_uuid)
-    owner_id = Column(String(255), unique=True, index=True)
-    record = Column(JSONB, nullable=False)
+    owner_id = Column(String(255), index=True)
+    cart_id = Column(String(255), index=True)
     buy_at = Column(DateTime, server_default=func.now())
 
 

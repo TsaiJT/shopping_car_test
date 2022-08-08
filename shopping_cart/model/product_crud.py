@@ -36,13 +36,13 @@ def update_product(id, **update_info):
         msg = "{}".format(e)
         return False, msg 
 
-    if update_info.get("name"):
+    if update_info.get("name") is not None:
         product.name = update_info.get("name")
 
-    if update_info.get("price"):
+    if update_info.get("price") is not None:
         product.price = update_info.get("price")
 
-    if update_info.get("inventory"):
+    if update_info.get("inventory") is not None:
         product.inventory = update_info.get("inventory")
 
     try:
