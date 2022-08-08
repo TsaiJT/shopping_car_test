@@ -1,0 +1,28 @@
+FROM    python:3.10.2-alpine3.15
+LABEL   maintainer="aaa@aaa.com"
+
+USER root
+
+RUN set -ex \
+    && apk add --no-cache \
+    curl openssl postgresql-libs libc-dev
+
+RUN sudo mkdir -p /opt/shopping_cart
+
+COPY . /opt/product
+
+RUN set -ex \
+    && apk add --no-cache --virtual .fetch-deps \
+    g++ python3-dev openssl-dev musl-dev libpq-dev libffi-dev \
+    \
+    && pip install -r /opt/shopping_cart/requirements.txt \
+    && apk del .fetch-deps \
+    && adduser -u 1000 -s /bin/bash -D testuser testuser \
+    && echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
+    && chown -R testuser:testuser /opt/shopping_cart
+
+WORKDIR /opt/shopping_cart
+
+USER testuser
+
+CMD ["/bin/bash"]

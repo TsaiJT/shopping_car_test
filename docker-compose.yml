@@ -1,0 +1,62 @@
+version: '3.5'
+
+networks:
+  shopping_car_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.170.0/24
+
+services:
+  shopping_car:
+    build:
+        context: ./shopping_car
+        dockerfile: Dockerfile.shopping_car
+    image: shopping_car_service:${SHOPPING_CAR_VERSION_TAG}
+
+    entrypoint: "sh -c"
+    command: "exit 0"
+
+
+  postgres:
+    image: postgres:14.2-alpine
+    restart: always
+    container_name: product_postgres
+    networks:
+      product_net:
+        ipv4_address: 192.168.170.9
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_CERT}
+      POSTGRES_DB: ${POSTGRES_DB}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    volumes:
+      - /opt/shopping_car/postgres/data:/var/lib/postgresql/data
+
+
+  shopping_car_service:
+    image: shopping_car_service:${SHOPPING_CAR_VERSION_TAG}
+    restart: always
+    container_name: shopping_car_service
+    depends_on:
+      - postgres
+      - shopping_car
+    networks:
+      product_net:
+        ipv4_address: 192.168.170.112
+    ports:
+      - 8000:8000
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    volumes:
+      - /opt/shopping_car/.env:/opt/product/.env
+      - /opt/shopping_car/logs:/opt/product/runtime_log
+    command: >
+      sh -c
+      "sleep 15 && sudo chown -R 1000:1000 /opt/shopping_car && uvicorn app:app --reload --host 0.0.0.0 --port 8000"
