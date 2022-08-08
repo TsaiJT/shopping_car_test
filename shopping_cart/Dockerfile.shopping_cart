@@ -7,7 +7,7 @@ RUN set -ex \
 
 RUN mkdir -p /opt/shopping_cart
 
-COPY . /opt/product
+COPY . /opt/shopping_cart
 
 RUN set -ex \
     && apk add --no-cache --virtual .fetch-deps \
