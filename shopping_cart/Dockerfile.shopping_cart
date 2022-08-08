@@ -1,13 +1,11 @@
 FROM    python:3.10.2-alpine3.15
 LABEL   maintainer="aaa@aaa.com"
 
-USER root
-
 RUN set -ex \
     && apk add --no-cache \
     curl openssl postgresql-libs libc-dev
 
-RUN sudo mkdir -p /opt/shopping_cart
+RUN mkdir -p /opt/shopping_cart
 
 COPY . /opt/product
 
