@@ -23,7 +23,7 @@ services:
     restart: always
     container_name: product_postgres
     networks:
-      product_net:
+      shopping_car_net:
         ipv4_address: 192.168.170.9
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_CERT}
@@ -45,7 +45,7 @@ services:
       - postgres
       - shopping_car
     networks:
-      product_net:
+      shopping_car_net:
         ipv4_address: 192.168.170.112
     ports:
       - 8000:8000
