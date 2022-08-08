@@ -14,17 +14,6 @@ from config import settings
 
 Base = declarative_base()
 
-# cart_table = Table("cart", Base.metadata,
-#     Column("user_id", String(255), ForeignKey("users.id"), primary_key=True),
-#     Column("product_id", String(255), ForeignKey("products.id"), primary_key=True)
-# )
-
-
-# checkout_table = Table("checkout", Base.metadata,
-#     Column("user_id", String(255), ForeignKey("users.id"), primary_key=True),
-#     Column("order_id", String(255), ForeignKey("orders.id"), primary_key=True)
-# )
-
 
 def generate_uuid():
     return uuid.uuid4().hex
@@ -38,16 +27,6 @@ class User(Base):
     description = Column(String(255))
     create_at = Column(DateTime, server_default=func.now())
     is_block = Column(Boolean, nullable=False, default=False)
-
-    # products = relationship("Product",
-    #                     secondary=cart_table,
-    #                     backref=backref("users", lazy="dynamic")
-    #                     )
-
-    # orders = relationship("Order",
-    #                     secondary=checkout_table,
-    #                     backref=backref("users", lazy="dynamic")
-    #                     )
 
 
 class Product(Base):
@@ -63,18 +42,18 @@ class CartInfo(Base):
     __tablename__ = "cart_info"
 
     id = Column(String(255), primary_key=True, default=generate_uuid)
-
     owner_id = Column(String(255), index=True)
     item_id = Column(String(255), index=True)
     quantity = Column(Integer, nullable=False)
-
+    
 
 class Order(Base):
     __tablename__ = "orders"
 
     id = Column(String(255), primary_key=True, default=generate_uuid)
     owner_id = Column(String(255), index=True)
-    cart_id = Column(String(255), index=True)
+    record = Column(JSONB, nullable=False)
+    total = Column(Integer, nullable=False)
     buy_at = Column(DateTime, server_default=func.now())
 
 

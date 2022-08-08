@@ -2,12 +2,13 @@
 from pydantic import BaseModel
 
 
-class Cart_Info(BaseModel):
-    cart_info: dict
+class Update_Item_quantity(BaseModel):
+    product_id: str
+    quantity: int
 
 
 class Cart_Item(BaseModel):
-    product_ids: list[str] = []
+    product_id: str
 
 
 class Cart_Checkout(BaseModel):

@@ -1,6 +1,7 @@
 # module
-from model.models import session, User, Product, CartInfo, Order
-
+from model.models import session, CartInfo, Order
+from model.user_crud import get_user
+from model.product_crud import get_product
 
 def create_cart_info(user_obj, product_obj, quantity):
 
@@ -18,75 +19,65 @@ def create_cart_info(user_obj, product_obj, quantity):
         session.add(cart)
         session.commit()
 
-        return True, "create successfully"
-
     except Exception as e:
         msg = "{}".format(e)
         return False, "{}".format(e)
 
-
-def update_cart_info(cart_info, product_obj, quantity):
-
-    if quantity > product_obj.inventory:
-        return False, "Inventory shortage"
-
-    if cart_info.quantity == quantity:
-        return False, "no need to update"
-
-    try:
-        cart_info.quantity = quantity
-        session.add(cart_info)
-        session.commit()
-
-        return True, "create successfully"
-
-    except Exception as e:
-        msg = "{}".format(e)
-        return False, "{}".format(e)
+    return True, "create successfully"
 
 
-
-def update_to_cart(user_id, cart_infos):
+def add_to_cart(user_id, product_id):
     # get user obj
+    is_ok, user = get_user(user_id)
+    if not is_ok:
+        return False, user
+
+    # get product obj
+    is_ok, product = get_product(product_id)
+    if not is_ok:
+        return False, product
+
+    is_ok, msg = create_cart_info(user, product, 1)
+    if not is_ok:
+        return False, msg
+
+    return True, "add to cart successfully"
+
+
+def update_to_cart(user_id, product_id, quantity):
+    # get user obj
+    is_ok, user = get_user(user_id)
+    if not is_ok:
+        return False, user
+
+    # get product obj
+    is_ok, product = get_product(product_id)
+    if not is_ok:
+        return False, product
+
+    # get cart obj
     try:
-        user = session.query(User).filter_by(id=user_id).first()
-        if user is None:
-            return False, "not found"
+        cart_info = session.query(CartInfo).filter_by(owner_id=user_id, item_id=product_id).first()
+        if cart_info is None:
+            return False, "add item first"
 
     except Exception as e:
         msg = "{}".format(e)
         return False, msg
 
-    # check each product id
-    for product_id in cart_infos:
-        try:
-            product = session.query(Product).filter_by(id=product_id).first()
-            print(product.id)
-            if product is None:
-                return False, "{} not found".format(product_id)
+    if quantity > product.inventory:
+        return False, "Inventory shortage"
 
-        except Exception as e:
-            msg = "{}".format(e)
-            return False, msg
+    # update quantity
+    try:
+        cart_info.quantity = quantity
+        session.commit()
 
-        try:
-            cart_info = session.query(CartInfo).filter_by(owner_id=user_id, item_id=product_id).first()
-            quantity = cart_infos[product_id]
-            if cart_info is None:
-                is_ok, msg = create_cart_info(user, product, quantity)
-                if not is_ok:
-                    return False, msg
+    except Exception as e:
+        msg = "{}".format(e)
+        return False, "{}".format(e)
 
-            else:
-                is_ok, msg = update_cart_info(cart_info, product, quantity)
-                if not is_ok:
-                    return False, msg
-
-        except Exception as e:
-            msg = "{}".format(e)
-            return False, msg
-
-    return True, "cart info update successfully"
+    return True, "update successfully"    
 
 
 def get_cart_info(user_id):
@@ -101,7 +92,7 @@ def get_cart_info(user_id):
     
     for cart_info in cart_infos:
         tmp = {}
-        tmp[cart_info.id] = {}
+        tmp[cart_info.id] = {} 
         tmp[cart_info.id][cart_info.item_id] = cart_info.quantity
 
         res.append(tmp)
@@ -109,42 +100,36 @@ def get_cart_info(user_id):
     return True, res
 
 
-def del_cart_item(user_id, product_ids):
+def del_cart_item(user_id, product_id):
 
     # get user obj
+    is_ok, user = get_user(user_id)
+    if not is_ok:
+        return False, user
+
+    # get product obj
+    is_ok, product = get_product(product_id)
+    if not is_ok:
+        return False, product
+
     try:
-        user = session.query(User).filter_by(id=user_id).first()
-        if user is None:
-            return False, "not found"
+        cart_info = session.query(CartInfo).filter_by(owner_id=user_id, item_id=product_id).first()
+        if cart_info is None:
+            return False, "no item could be deleted"
+
+        session.delete(cart_info)
+        session.commit()
 
     except Exception as e:
         msg = "{}".format(e)
         return False, msg
 
-    count = 0
-    for product_id in product_ids:
-        try:
-            cart_info = session.query(CartInfo).filter_by(owner_id=user_id, item_id=product_id).first()
-            if cart_info is None:
-                continue
-
-            session.delete(cart_info)
-            session.commit()
-
-            count += 1
-        except Exception as e:
-            msg = "{}".format(e)
-            return False, msg
-
-    if count == 0:
-        return False, "not item in cart"
-    
-    return True, "delete Successfully"
+    return True, "delete item from cart successfully"
 
 
 def checkout_cart(cart_ids):
-    record = {}
-    tmp_total = 0
+    records = []
+    total = 0
     owner_id = ""
 
     for cart_id in cart_ids:
@@ -154,11 +139,13 @@ def checkout_cart(cart_ids):
             if cart_info is None:
                 continue
 
-            product = session.query(CartInfo).filter_by(id=cart_info.item_id).first()
-            if product is None:
-                return False, "inventory shortage"
+            # get product obj
+            is_ok, product = get_product(cart_info.item_id)
+            if not is_ok:
+                return False, product
+
             if cart_info.quantity > product.inventory:
-                return False, "product not exist"
+                return False, "item not enough"
 
             if not owner_id:
                 owner_id = cart_info.owner_id
@@ -168,16 +155,33 @@ def checkout_cart(cart_ids):
             return False, msg
 
         tmp["product_id"] = product.id
-        tmp["product_id"]["quantity"] = cart_info.quantity
-        tmp["product_id"]["cost"] = cart_info.quantity * product.price
-        tmp_total += tmp["product_id"]["cost"]
+        tmp["quantity"] = cart_info.quantity
+        tmp["cost"] = cart_info.quantity * product.price
+        records.append(tmp)
+        
+        total += tmp["cost"]
 
-    session.begin()
     try:
-        order = Order(owner_id=owner_id, record=record)
+        # reduce inventory
+        for record in records:
+            # get product obj
+            is_ok, product = get_product(record["product_id"])
+            if not is_ok:
+                session.rollback()
+                return False, product
+
+            product.inventory = product.inventory - record["quantity"]
+            session.commit()
+
+        # make order
+        order = Order(owner_id=owner_id, 
+                    record=records, 
+                    total=total)
+
         session.add(order)
         session.commit()
 
+        # delete cart info
         session.query(CartInfo).filter(CartInfo.id.in_(cart_ids)).delete()
         session.commit()
 
@@ -188,3 +192,18 @@ def checkout_cart(cart_ids):
         return False, msg
 
     return True, "checkout Successfully"
+
+
+
+# tmp
+def get_user_orders(user_id):
+    try:
+        user_orders = session.query(Order).filter_by(owner_id=user_id)
+        if user_orders is None:
+            return False, "user no order information"
+
+    except Exception as e:
+        msg = "{}".format(e)
+        return False, msg
+
+    return True, user_orders

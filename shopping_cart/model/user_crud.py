@@ -60,7 +60,6 @@ def update_user(id, **update_info):
 
 # r
 def get_user(id):
-    res = {}
     try:
         user = session.query(User).filter_by(id=id).first()
         if user is None:
@@ -70,11 +69,8 @@ def get_user(id):
         msg = "{}".format(e)
         return False, msg
 
-    res["id"] = user.id
-    res["email"] = user.email
-    res["description"] = user.description
+    return True, user
 
-    return True, res
 
 def get_user_by_email(email):
     try:

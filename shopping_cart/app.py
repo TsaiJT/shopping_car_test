@@ -26,13 +26,14 @@ from schema.user_schemas import UserReadOut, UsersReadOut, \
                                 UserUpdateIn, UserUpdateOut, \
                                 UserDeleteOut, UserLogin
 from schema.token_schemas import Token
-from schema.cart_schemas import Cart_Info, Cart_Item, Cart_Checkout
+from schema.cart_schemas import Update_Item_quantity, Cart_Item, Cart_Checkout
 
 from model.product_crud import create_product, update_product, \
                                 get_product, get_products, delete_product
 from model.user_crud import create_user, update_user, \
                             get_user, get_users, delete_user
-from model.cart_info_crud import update_to_cart, get_cart_info, del_cart_item, checkout_cart
+from model.cart_info_crud import add_to_cart, update_to_cart, get_cart_info, \
+                            del_cart_item, checkout_cart, get_user_orders
 
 
 
@@ -69,13 +70,19 @@ async def product_updater(product_id: str, product: ProductUpdateIn):
 
 @app.get("/product/{product_id}", response_model=ProductReadOut)
 async def product_getter(product_id: str):
-    is_ok, result = get_product(product_id)
+    is_ok, product = get_product(product_id)
 
-    status_code = 200
     if not is_ok:
-        result = {"msg": result}
+        result = {"msg": product}
         status_code = 400
-
+    else:
+        result = {}
+        result["id"] = product.id
+        result["name"] = product.name
+        result["price"] = product.price
+        result["inventory"] = product.inventory 
+        status_code = 200
+    
     return JSONResponse(status_code=status_code, 
                         content=result)
 
@@ -142,13 +149,19 @@ async def user_updater(user_id: str, user: UserUpdateIn):
 
 @app.get("/user/{user_id}", response_model=UserReadOut)
 async def user_getter(user_id: str):
-    is_ok, result = get_user(user_id)
-    print(result)
+    is_ok, user = get_user(user_id)
 
-    status_code = 200
     if not is_ok:
-        result = {"msg": result}
+        result = {"msg": user}
         status_code = 400
+
+    else:
+        result = {}
+        result["id"] = user.id
+        result["email"] = user.email
+        result["description"] = user.description
+
+        status_code = 200
 
     return JSONResponse(status_code=status_code, 
                         content=result)
@@ -219,14 +232,34 @@ async def get_cart(user_id: str,
                         content=result) 
 
 
-@app.put("/update_to_cart/{user_id}")
-async def update_cart(user_id: str, 
-                    cart_info: Cart_Info,
-                    current_user: UserLogin = Depends(get_current_user)):
+@app.put("/add_to_cart/{user_id}")
+async def cart_add_item(user_id: str, 
+                        product_id: Cart_Item,
+                        current_user: UserLogin = Depends(get_current_user)):
     
     result = {}
 
-    is_ok, msg = update_to_cart(user_id, cart_info.cart_info)
+    is_ok, msg = add_to_cart(user_id, product_id.product_id)
+    result["msg"] = msg
+
+    status_code = 200
+    if not is_ok:
+        status_code = 400
+
+    return JSONResponse(status_code=status_code, 
+                        content=result)
+
+
+@app.put("/update_cart_item/{user_id}")
+async def cart_item_update(user_id: str, 
+                        update_item: Update_Item_quantity,
+                        current_user: UserLogin = Depends(get_current_user)):
+    
+    result = {}
+
+    is_ok, msg = update_to_cart(user_id, 
+                            update_item.product_id,
+                            update_item.quantity)
     result["msg"] = msg
 
     status_code = 200
@@ -238,12 +271,12 @@ async def update_cart(user_id: str,
 
 @app.put("/del_cart_item/{user_id}")
 async def cart_item_delete(user_id: str, 
-                     product_ids: Cart_Item,
-                    current_user: UserLogin = Depends(get_current_user)):
+                        product_id: Cart_Item,
+                        current_user: UserLogin = Depends(get_current_user)):
     
     result = {}
 
-    is_ok, msg = del_cart_item(user_id, product_ids.product_ids)
+    is_ok, msg = del_cart_item(user_id, product_id.product_id)
     result["msg"] = msg
 
     status_code = 200
@@ -255,7 +288,7 @@ async def cart_item_delete(user_id: str,
 
 
 @app.post("/cart_checkout")
-async def cart_checkout(cart_id: Cart_Checkout,
+async def cart_checkout(cart_ids: Cart_Checkout,
                         current_user: UserLogin = Depends(get_current_user)):
     result = {}
 
@@ -268,6 +301,31 @@ async def cart_checkout(cart_id: Cart_Checkout,
 
     return JSONResponse(status_code=status_code, 
                         content=result)
+
+
+@app.get("/orders/{user_id}")
+async def orders_getter(user_id: str, 
+                        current_user: UserLogin = Depends(get_current_user)):
+    
+    is_ok, user_orders = get_user_orders(user_id)
+
+    if not is_ok:
+        result = {"msg": user_orders}
+        status_code = 400
+    else:
+        status_code = 200
+        result = []
+        for user_order in user_orders:
+            tmp = {}
+            tmp["order_id"] = user_order.id
+            tmp["record"] = user_order.record
+            tmp["total"] = user_order.total
+
+            result.append(tmp)
+
+    return JSONResponse(status_code=status_code, 
+                        content=result)
+
 
 
 if __name__ == "__main__":

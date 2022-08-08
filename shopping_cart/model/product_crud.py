@@ -56,7 +56,6 @@ def update_product(id, **update_info):
 
 # r
 def get_product(id):
-    res = {}
     try:
         product = session.query(Product).filter_by(id=id).first()
         if product is None:
@@ -66,12 +65,7 @@ def get_product(id):
         msg = "{}".format(e)
         return False, msg
 
-    res["id"] = product.id
-    res["name"] = product.name
-    res["price"] = product.price
-    res["inventory"] = product.inventory
-
-    return True, res
+    return True, product
 
 
 def get_products():

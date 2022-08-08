@@ -1,18 +1,18 @@
 version: '3.5'
 
 networks:
-  shopping_car_net:
+  shopping_cart_net:
     driver: bridge
     ipam:
       config:
         - subnet: 192.168.170.0/24
 
 services:
-  shopping_car:
+  shopping_cart:
     build:
         context: ./shopping_cart
         dockerfile: Dockerfile.shopping_cart
-    image: shopping_car_service:${SHOPPING_CAR_VERSION_TAG}
+    image: shopping_cart_service:${SHOPPING_CART_VERSION_TAG}
 
     entrypoint: "sh -c"
     command: "exit 0"
@@ -23,7 +23,7 @@ services:
     restart: always
     container_name: shopping_cart_postgres
     networks:
-      shopping_car_net:
+      shopping_cart_net:
         ipv4_address: 192.168.170.9
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_CERT}
@@ -34,18 +34,18 @@ services:
         max-size: "50m"
         max-file: "5"
     volumes:
-      - /opt/shopping_car/postgres/data:/var/lib/postgresql/data
+      - /opt/shopping_cart/postgres/data:/var/lib/postgresql/data
 
 
-  shopping_car_service:
-    image: shopping_car_service:${SHOPPING_CAR_VERSION_TAG}
+  shopping_cart_service:
+    image: shopping_cart_service:${SHOPPING_CART_VERSION_TAG}
     restart: always
-    container_name: shopping_car_service
+    container_name: shopping_cart_service
     depends_on:
       - postgres
-      - shopping_car
+      - shopping_cart
     networks:
-      shopping_car_net:
+      shopping_cart_net:
         ipv4_address: 192.168.170.112
     ports:
       - 8000:8000
