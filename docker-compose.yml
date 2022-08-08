@@ -10,8 +10,8 @@ networks:
 services:
   shopping_car:
     build:
-        context: ./shopping_car
-        dockerfile: Dockerfile.shopping_car
+        context: ./shopping_cart
+        dockerfile: Dockerfile.shopping_cart
     image: shopping_car_service:${SHOPPING_CAR_VERSION_TAG}
 
     entrypoint: "sh -c"
