@@ -7,7 +7,7 @@ def create_product(**create_info):
     try:
         product = session.query(Product).filter_by(name=name).first()
         if product:
-            return False, "Product name already exist"
+            return False, "product name already exist"
 
     except Exception as e:
         msg = "{}".format(e)
@@ -30,7 +30,7 @@ def update_product(id, **update_info):
     try:
         product = session.query(Product).filter_by(id=id).first()
         if product is None:
-            return False, "Product not found"
+            return False, "product not found"
 
     except Exception as e:
         msg = "{}".format(e)
@@ -59,7 +59,7 @@ def get_product(id):
     try:
         product = session.query(Product).filter_by(id=id).first()
         if product is None:
-            return False, "Product not found"
+            return False, "product not found"
 
     except Exception as e:
         msg = "{}".format(e)
@@ -94,11 +94,11 @@ def delete_product(id):
     try:
         del_product = session.query(Product).filter_by(id=id).first()
         if del_product is None:
-            return False, "Product not found"
+            return False, "product not found"
         
         session.delete(del_product)
         session.commit()
-        return True, "Delete Successfully"
+        return True, "delete successfully"
 
     except Exception as e:
         msg = "{}".format(e)

@@ -3,14 +3,12 @@ import datetime
 
 # 3rd
 import uvicorn
-from fastapi import Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from jose import JWTError, jwt
 
 
 # module 
-from fastapi_init import app
 from config import settings
 from utils_tool.common_tools import return_message
 from utils_tool.authenticate_tools import authenticate_user
@@ -36,7 +34,7 @@ from model.cart_info_crud import add_to_cart, update_to_cart, get_cart_info, \
                             del_cart_item, checkout_cart, get_user_orders
 
 
-
+app = FastAPI()
 
 @app.post("/product", response_model=ProductCreateOut)
 async def product_creater(product: ProductCreateIn):
